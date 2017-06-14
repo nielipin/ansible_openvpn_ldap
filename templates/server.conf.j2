@@ -1,0 +1,50 @@
+#change with your port
+port {{ vpn_port }}
+
+#You can use udp or tcp
+proto {{ vpn_proto }}
+
+# "dev tun" will create a routed IP tunnel.
+dev tun
+
+#Certificate Configuration
+
+#ca certificate
+ca /etc/openvpn/keys/ca.crt
+
+#Server Certificate
+cert /etc/openvpn/keys/server.crt
+
+#Server Key and keep this is secret
+key /etc/openvpn/keys/server.key
+
+#See the size a dh key in /etc/openvpn/keys/
+dh /etc/openvpn/keys/dh{{ key_size }}.pem
+
+#Internal IP will get when already connect
+server {{ internal_net_ip }} {{ internal_net_mask }}
+
+#this line will redirect all traffic through our OpenVPN
+push "redirect-gateway def1"
+
+#Provide DNS servers to the client, you can use goolge DNS
+push "dhcp-option DNS {{ dns1ip }}"
+push "dhcp-option DNS {{ dns2ip }}"
+
+#Enable multiple client to connect with same key
+duplicate-cn
+
+#Enable ldap plugin
+plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"
+
+keepalive 20 60
+comp-lzo
+persist-key
+persist-tun
+daemon
+
+#enable log
+log-append /var/log/myvpn/openvpn.log
+
+#Log Level
+verb 3

@@ -1,0 +1,17 @@
+client
+dev tun
+proto {{ vpn_proto }}
+
+#Server IP and Port
+remote {{ ipify_public_ip }} {{ vpn_port }}
+
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+mute-replay-warnings
+ca ca.crt
+cert client.crt
+key client.key
+ns-cert-type server
+comp-lzo

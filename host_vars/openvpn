@@ -1,0 +1,20 @@
+---
+country: UK
+province: Hampshire
+city: Fleet
+org: Nokia
+email: maciej.nielipinski@nokia.com
+ou: DC
+key_size: 2048
+key_expire: 3650
+ca_expire: 3650
+key_name: EasyRSA
+vpn_port: 1194
+vpn_proto: udp
+internal_net_ip: 192.168.77.0
+internal_net_mask: 255.255.255.0
+dns1ip: 10.6.143.35
+dns2ip: 10.6.143.36
+vpn_confdir: /etc/openvpn/
+hostname: openvpnsrv.dc-silab.nsn-rdnet.net
+lab_network: 10.6.128.0/20
