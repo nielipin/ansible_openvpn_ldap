@@ -10,8 +10,11 @@ nobind
 persist-key
 persist-tun
 mute-replay-warnings
-ca ca.crt
-cert client.crt
-key client.key
 ns-cert-type server
 comp-lzo
+auth-user-pass
+
+<ca>
+{{ ca_cert['content'] | b64decode }}
+</ca>
+

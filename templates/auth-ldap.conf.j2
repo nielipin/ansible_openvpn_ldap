@@ -1,6 +1,6 @@
 <LDAP>
 	# LDAP server URL
-	URL		ldap://ldap1.example.org
+	URL		{{ ldap_server }}
 
 	# Bind DN (If your LDAP server doesn't support anonymous binds)
 	# BindDN		uid=Manager,ou=People,dc=example,dc=com
@@ -12,21 +12,21 @@
 	Timeout		15
 
 	# Enable Start TLS
-	TLSEnable	yes
+	TLSEnable	no
 
 	# Follow LDAP Referrals (anonymously)
-	FollowReferrals yes
+	#FollowReferrals yes
 
 	# TLS CA Certificate File
-	TLSCACertFile	/usr/local/etc/ssl/ca.pem
+	#TLSCACertFile	/usr/local/etc/ssl/ca.pem
 
 	# TLS CA Certificate Directory
-	TLSCACertDir	/etc/ssl/certs
+	#TLSCACertDir	/etc/ssl/certs
 
 	# Client Certificate and key
 	# If TLS client authentication is required
-	TLSCertFile	/usr/local/etc/ssl/client-cert.pem
-	TLSKeyFile	/usr/local/etc/ssl/client-key.pem
+	#TLSCertFile	/usr/local/etc/ssl/client-cert.pem
+	#TLSKeyFile	/usr/local/etc/ssl/client-key.pem
 
 	# Cipher Suite
 	# The defaults are usually fine here
@@ -35,10 +35,10 @@
 
 <Authorization>
 	# Base DN
-	BaseDN		"ou=People,dc=example,dc=com"
+	BaseDN		{{ basedn }}
 
 	# User Search Filter
-	SearchFilter	"(&(uid=%u)(accountStatus=active))"
+	SearchFilter	"(&(objectClass=posixAccount)(uid=%u))"
 
 	# Require Group Membership
 	RequireGroup	false

@@ -25,7 +25,8 @@ dh /etc/openvpn/keys/dh{{ key_size }}.pem
 server {{ internal_net_ip }} {{ internal_net_mask }}
 
 #this line will redirect all traffic through our OpenVPN
-push "redirect-gateway def1"
+#push "redirect-gateway def1"
+push "route {{ lab_network_ip }} {{ lab_network_mask }}"
 
 #Provide DNS servers to the client, you can use goolge DNS
 push "dhcp-option DNS {{ dns1ip }}"
@@ -35,7 +36,9 @@ push "dhcp-option DNS {{ dns2ip }}"
 duplicate-cn
 
 #Enable ldap plugin
-plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"
+plugin /usr/lib{{ ansible_userspace_bits }}/openvpn/plugin/lib/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"
+client-cert-not-required
+username-as-common-name
 
 keepalive 20 60
 comp-lzo

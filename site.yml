@@ -1,9 +1,21 @@
 ---
 - name: Configure OPENVPN server
-  hosts: openvpn
+  hosts: openvpnprod
   tasks:
     - name: set hostname
       hostname: name={{ hostname }}
+    
+    - name: clean easy-rsa
+      yum: name=easy-rsa state=absent
+
+    - name: clean openvpn
+      yum: name=openvpn state=absent
+
+    - name: clean openvpn-ldap
+      yum: name=openvpn-auth-ldap state=absent
+ 
+    - name: Clean vpn configs
+      file: state=absent path="{{ vpn_confdir }}"
       
     - name: isntall epel
       yum: name=epel-release state=latest
@@ -65,7 +77,7 @@
         line: '"$EASY_RSA/pkitool" $*'
         
     - name: Create CA and server keys
-      shell: "source ./vars && ./clean-all && ./build-ca && ./build-key-server server && ./build-dh && ./build-key client"
+      shell: "source ./vars && ./clean-all && ./build-ca && ./build-key-server server && ./build-dh"
       args:
         chdir: "{{ vpn_confdir }}easy-rsa/2.0/"
     
@@ -75,16 +87,14 @@
         regexp: 'unique_subject'
         line: 'unique_subject = no'
     
-    - name: Create client keys
-      shell: "source ./vars && ./build-key client"
-      args:
-        chdir: "{{ vpn_confdir }}easy-rsa/2.0/"
-      
     - name: Creates copy of easy-rsa
       command: cp -r {{ vpn_confdir }}easy-rsa/2.0/keys/ {{ vpn_confdir}}
       
     - name: create openVPN config
       template: src=templates/server.conf.j2 dest={{ vpn_confdir }}server.conf
+
+    - name: create openVPN-ldap config
+      template: src=templates/auth-ldap.conf.j2 dest={{ vpn_confdir }}/auth/ldap.conf
       
     - name: check if firewalld exists
       stat: path=/lib/systemd/system/firewalld.service
@@ -103,7 +113,6 @@
 
     - name: install iptables
       yum: name=iptables-services  state=latest
-      when: iptables_st.stat.exists == True
       
     - name: enable iptables-services
       service:
@@ -115,15 +124,22 @@
     - name: iptables rules INPUT
       iptables:
         chain: INPUT
+        action: insert
         protocol: "{{ vpn_proto }}"
         destination_port: "{{ vpn_port }}"
+        jump: ACCEPT
+
+    - name: iptables rules FORWARD
+      iptables:
+        chain: FORWARD
+        action: insert
         jump: ACCEPT
 
     - name: iptables rules POSTROUTING
       iptables:
         table: nat
         chain: POSTROUTING
-        source: "{{ lab_network }}"
+        source: "{{  internal_net_ip }}/{{ internal_net_mask }}"
         out_interface: "{{ ansible_default_ipv4.interface }}"
         jump: MASQUERADE
 
@@ -138,7 +154,12 @@
      
     - name: get public IP
       ipify_facts: 
-    
+
+    - name: read ca_cert
+      slurp:
+        src: "{{ vpn_confdir }}/keys/ca.crt"
+      register: ca_cert
+
     - name: generate client conf
       template: src=templates/client.ovpn.j2 dest={{ vpn_confdir }}client.ovpn
 
@@ -150,9 +171,8 @@
         cp  {{ vpn_confdir }}{{ item }} {{ vpn_confdir}}client/
       with_items:
         - keys/ca.crt
-        - keys/client.crt
-        - keys/client.key
         - client.ovpn
+        
     - name: enable routing
       lineinfile:
         dest: "/etc/sysctl.conf"
@@ -161,3 +181,13 @@
         
     - name: reload sysctl
       command: sysctl -p
+
+    - name: restart openVPN server
+      systemd: name=openvpn@server state=restarted enabled=yes
+
+    
+    - name: fetching client config file
+      fetch:
+        src: "{{ vpn_confdir }}client/client.ovpn"
+        dest: client.ovpn
+        flat: yes

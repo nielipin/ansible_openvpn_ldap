@@ -1,2 +1,3 @@
 [openvpnservers]
-openvpn ansible_ssh_host=10.6.143.130 
+openvpn ansible_ssh_host=10.6.143.130 ansible_user=root
+openvpnprod ansible_ssh_host=10.6.143.53 ansible_user=root
