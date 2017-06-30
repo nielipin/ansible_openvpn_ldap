@@ -7,7 +7,7 @@ openvpn server and easy-rsa with ldap authentication plugin
 
 ## Installing
 ```
-git clone https://gitlab.dc-silab.nsn-rdnet.net/ansible/openVPN/tree/master
+git clone https://github.com/nielipin/ansible_openvpn_ldap
 yum install ansible
 ```
 Edit hosts and host_vars/openvpn with your values
