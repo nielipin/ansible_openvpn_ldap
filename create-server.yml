@@ -1,0 +1,6 @@
+---
+- hosts: openvpn
+  roles:
+    - common
+    - ca
+    - openvpn-server

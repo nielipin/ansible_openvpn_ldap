@@ -1,0 +1,66 @@
+    - name: isntall easy-rsa
+      yum: name=easy-rsa state=latest
+  
+    - name: Creates directory
+      file: path={{ vpn_confdir }}easy-rsa state=directory
+
+    - name: stat easy-rsa
+      stat: path=/usr/share/easy-rsa
+      register: easy_stat
+
+    - name: Creates copy of easy-rsa
+      command: cp -r /usr/share/easy-rsa {{ vpn_confdir }}
+
+    - name: update vars
+      lineinfile:
+        state: present
+        dest: "{{ vpn_confdir }}easy-rsa/2.0/vars"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: 'KEY_COUNTRY=', line: 'export KEY_COUNTRY="{{ country }}"' }
+        - { regexp: 'KEY_PROVINCE=', line: 'export KEY_PROVINCE="{{ province }}"' }
+        - { regexp: 'KEY_CITY=', line: 'export KEY_CITY="{{ city }}"' }
+        - { regexp: 'KEY_ORG=', line: 'export KEY_ORG="{{ org }}"' }
+        - { regexp: 'KEY_EMAIL=', line: 'export KEY_EMAIL="{{ email }}"' }
+        - { regexp: 'KEY_OU=', line: 'export KEY_OU="{{ ou }}"' }
+        - { regexp: 'KEY_SIZE=', line: 'export KEY_SIZE={{ key_size }}' }
+        - { regexp: 'KEY_EXPIRE=', line: 'export KEY_EXPIRE={{ key_expire }}' }
+        - { regexp: 'CA_EXPIRE=', line: 'export CA_EXPIRE={{ ca_expire }}' }
+        - { regexp: 'KEY_NAME=', line: 'export KEY_NAME="{{ key_name }}"' }
+        - { regexp: 'KEY_CN=', line: 'export KEY_CN="{{ ansible_hostname }}"' }
+
+    - name: update build-ca
+      lineinfile:
+        dest: "{{ vpn_confdir }}easy-rsa/2.0/build-ca"
+        regexp: 'EASY_RSA/pkitool'
+        line: '"$EASY_RSA/pkitool" --initca $*'
+        
+    - name: update build-key-server
+      lineinfile:
+        dest: "{{ vpn_confdir }}easy-rsa/2.0/build-key-server"
+        regexp: 'EASY_RSA/pkitool'
+        line: '"$EASY_RSA/pkitool" --server $*'
+        
+    - name: update build-key
+      lineinfile:
+        dest: "{{ vpn_confdir }}easy-rsa/2.0/build-key"
+        regexp: 'EASY_RSA/pkitool'
+        line: '"$EASY_RSA/pkitool" $*'
+        
+    - name: Create CA and server keys
+      shell: "source ./vars && ./clean-all && ./build-ca && ./build-key-server server && ./build-dh"
+      args:
+        chdir: "{{ vpn_confdir }}easy-rsa/2.0/"
+    
+    - name: update key attributes 
+      lineinfile:
+        dest: "{{ vpn_confdir }}easy-rsa/2.0/keys/index.txt.attr"
+        regexp: 'unique_subject'
+        line: 'unique_subject = no'
+
+    - name: Creates copy of easy-rsa
+      command: cp -r {{ vpn_confdir }}easy-rsa/2.0/keys/ {{ vpn_confdir}}
+
+  
+

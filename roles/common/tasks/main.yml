@@ -1,0 +1,17 @@
+    - name: set hostname
+      hostname: name={{ hostname }}
+
+    - name: clean openvpn
+      yum: name=openvpn state=absent
+
+    - name: clean openvpn-ldap
+      yum: name=openvpn-auth-ldap state=absent
+
+    - name: Clean vpn configs
+      file: state=absent path="{{ vpn_confdir }}"
+
+    - name: clean easy-rsa
+      yum: name=easy-rsa state=absent
+
+    - name: install epel
+      yum: name=epel-release state=latest
